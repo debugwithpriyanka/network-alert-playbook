@@ -38,21 +38,6 @@ function Header() {
           <BellRing size={16} />
           Alert Playbook
         </button>
-
-        <button className="nav-item">
-          <FileText size={16} />
-          Notification Templates
-        </button>
-
-        <button className="nav-item">
-          <GitBranch size={16} />
-          Escalation Matrix
-        </button>
-
-        <button className="nav-item">
-          <BookOpen size={16} />
-          SOP
-        </button>
       </nav>
     </>
   );
