@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleAlert } from "lucide-react";
 
 import Header from "./components/Header";
@@ -6,15 +6,38 @@ import SearchBar from "./components/SearchBar";
 import FilterBar from "./components/FilterBar";
 import AlertCard from "./components/AlertCard";
 
-import { alertProcedures } from "./data/alertProcedures";
+import { getAlerts } from "./services/api";
 
 function App() {
+  const [alerts, setAlerts] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedFilter, setSelectedFilter] =
-    useState("All Alerts");
+  const [selectedFilter, setSelectedFilter] = useState("All Alerts");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadAlerts() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getAlerts();
+
+        setAlerts(data);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load alert procedures.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAlerts();
+  }, []);
 
   const filteredAlerts = useMemo(() => {
-    return alertProcedures.filter((alert) => {
+    return alerts.filter((alert) => {
       const searchText = search.toLowerCase().trim();
 
       const matchesSearch =
@@ -34,10 +57,7 @@ function App() {
           .includes(selectedFilter.toUpperCase());
       }
 
-      if (
-        selectedFilter ===
-        "Customer Notification Required"
-      ) {
+      if (selectedFilter === "Customer Notification Required") {
         matchesFilter = alert.notification
           .toLowerCase()
           .includes("required");
@@ -45,40 +65,30 @@ function App() {
 
       return matchesSearch && matchesFilter;
     });
-  }, [search, selectedFilter]);
+  }, [alerts, search, selectedFilter]);
 
   return (
     <div className="app">
       <Header />
 
       <main className="dashboard">
-
-        {/* SEARCH SECTION */}
-
         <section className="search-section">
           <div className="section-intro">
-
             <div>
-              <span className="eyebrow">
-                ALERT OPERATIONS
-              </span>
+              <span className="eyebrow">ALERT OPERATIONS</span>
 
               <h2>Select an Alert</h2>
 
               <p>
-                Search the alert library or filter procedures
-                by severity and notification requirement.
+                Search the alert library or filter procedures by severity
+                and notification requirement.
               </p>
             </div>
 
             <div className="procedure-count">
-              <strong>
-                {filteredAlerts.length}
-              </strong>
-
+              <strong>{filteredAlerts.length}</strong>
               <span>Procedures</span>
             </div>
-
           </div>
 
           <SearchBar
@@ -92,30 +102,54 @@ function App() {
           />
         </section>
 
-
-        {/* ALERT PROCEDURES */}
-
         <section className="alert-section">
-
           <div className="alert-section-header">
             <div>
-              <span className="eyebrow">
-                SOP LIBRARY
-              </span>
+              <span className="eyebrow">SOP LIBRARY</span>
 
               <h2>Alert Procedures</h2>
             </div>
 
-            <span className="results-label">
-              Showing {filteredAlerts.length} procedures
-            </span>
+            {!loading && !error && (
+              <span className="results-label">
+                Showing {filteredAlerts.length} procedures
+              </span>
+            )}
           </div>
 
+          {loading && (
+            <div className="empty-state">
+              <h3>Loading alert procedures...</h3>
+              <p>
+                Connecting to the alert management service.
+              </p>
+            </div>
+          )}
 
-          {filteredAlerts.length > 0 ? (
+          {!loading && error && (
+            <div className="empty-state">
+              <CircleAlert size={30} />
 
+              <h3>Unable to load alerts</h3>
+
+              <p>{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && filteredAlerts.length === 0 && (
+            <div className="empty-state">
+              <CircleAlert size={30} />
+
+              <h3>No alert procedures found</h3>
+
+              <p>
+                Try another search term or select a different filter.
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && filteredAlerts.length > 0 && (
             <div className="alert-grid">
-
               {filteredAlerts.map((alert) => (
                 <AlertCard
                   key={alert.id}
@@ -128,30 +162,9 @@ function App() {
                   }
                 />
               ))}
-
             </div>
-
-          ) : (
-
-            <div className="empty-state">
-
-              <CircleAlert size={30} />
-
-              <h3>
-                No alert procedures found
-              </h3>
-
-              <p>
-                Try another search term or select
-                a different filter.
-              </p>
-
-            </div>
-
           )}
-
         </section>
-
       </main>
     </div>
   );
