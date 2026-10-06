@@ -1167,3 +1167,353 @@ button {
     padding-right: 18px;
   }
 }
+
+/* =========================================
+   ALERT PROCEDURE MODAL
+========================================= */
+
+.procedure-modal {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  border: 1px solid #213d56;
+  border-radius: 14px;
+  background: #091827;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+/* Header */
+
+.procedure-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 26px;
+  border-bottom: 1px solid #193149;
+  background: #0b1b2c;
+}
+
+.procedure-title-area {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.procedure-severity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 10px;
+}
+
+.procedure-severity-icon.critical {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.procedure-severity-icon.high {
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+}
+
+.procedure-severity-icon.medium {
+  background: rgba(234, 179, 8, 0.12);
+  color: #eab308;
+}
+
+.procedure-severity-icon.low {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.procedure-severity-icon.informational {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+.procedure-modal-header h2 {
+  margin-bottom: 8px;
+  color: #f4f8fc;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.procedure-severity {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.procedure-severity.critical {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+}
+
+.procedure-severity.high {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+}
+
+.procedure-severity.medium {
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+}
+
+.procedure-severity.low {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+}
+
+.procedure-severity.informational {
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+}
+
+/* Body */
+
+.procedure-modal-body {
+  max-height: calc(90vh - 170px);
+  overflow-y: auto;
+  padding: 24px 26px;
+}
+
+.procedure-block {
+  margin-bottom: 26px;
+}
+
+.procedure-block-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.procedure-block-title svg {
+  color: #27c8ef;
+}
+
+.procedure-block-title h3 {
+  color: #dce8f1;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.meaning-text {
+  padding: 15px 17px;
+  border: 1px solid #1b344b;
+  border-radius: 8px;
+  background: #0b1c2d;
+  color: #91a5b8;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Checks */
+
+.check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #193149;
+  border-radius: 7px;
+  background: #0a1a2a;
+  color: #a8bac9;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.check-item:hover {
+  background: #0e2235;
+}
+
+.check-item input {
+  width: 15px;
+  height: 15px;
+  accent-color: #18c5ed;
+  cursor: pointer;
+}
+
+/* Actions */
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  color: #a8bac9;
+  font-size: 12px;
+}
+
+.action-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  border: 1px solid #24506b;
+  border-radius: 50%;
+  background: #0c2436;
+  color: #39ccef;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Requirements */
+
+.requirements-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+
+.requirement-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #1b394e;
+  border-radius: 8px;
+  background: #0a1b2b;
+}
+
+.requirement-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: #102a3d;
+  color: #39ccef;
+}
+
+.requirement-card > div:last-child {
+  min-width: 0;
+}
+
+.requirement-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: #687f94;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.requirement-card strong {
+  display: block;
+  color: #d9e7f0;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.requirement-card.required {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.requirement-card.required .requirement-icon {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Footer */
+
+.procedure-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 26px;
+  border-top: 1px solid #193149;
+  background: #0b1a2a;
+}
+
+.modal-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid #223d55;
+  border-radius: 6px;
+  background: #0d2133;
+  color: #8ea3b6;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-action-button:hover {
+  border-color: #32617c;
+  background: #112b40;
+  color: #dbe8f1;
+}
+
+.modal-action-button.primary {
+  border-color: #168cae;
+  background: #0c5d75;
+  color: #dff8ff;
+}
+
+.modal-action-button.primary:hover {
+  background: #0d718e;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+  .procedure-modal {
+    max-height: 94vh;
+  }
+
+  .procedure-modal-header {
+    padding: 18px;
+  }
+
+  .procedure-modal-body {
+    padding: 18px;
+  }
+
+  .procedure-modal-footer {
+    flex-wrap: wrap;
+    padding: 14px 18px;
+  }
+
+  .requirements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .procedure-title-area {
+    gap: 10px;
+  }
+
+  .procedure-modal-header h2 {
+    font-size: 18px;
+  }
+}

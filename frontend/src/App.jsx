@@ -6,6 +6,7 @@ import SearchBar from "./components/SearchBar";
 import FilterBar from "./components/FilterBar";
 import AlertCard from "./components/AlertCard";
 import AddAlertModal from "./components/AddAlertModal";
+import AlertProcedureModal from "./components/AlertProcedureModal";
 
 import { createAlert, getAlerts } from "./services/api";
 
@@ -18,6 +19,7 @@ function App() {
   const [error, setError] = useState("");
 
   const [showAddAlert, setShowAddAlert] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState(null);
 
   const handleCreateAlert = async (alertData) => {
   const newAlert = await createAlert(alertData);
@@ -85,6 +87,13 @@ function App() {
           <AddAlertModal
             onClose={() => setShowAddAlert(false)}
             onCreate={handleCreateAlert}
+          />
+       )}
+
+        {selectedAlert && (
+          <AlertProcedureModal
+              alert={selectedAlert}
+              onClose={() => setSelectedAlert(null)}
           />
        )}
 
@@ -177,20 +186,15 @@ function App() {
 
           {!loading && !error && filteredAlerts.length > 0 && (
             <div className="alert-grid">
-              {filteredAlerts.map((alert) => (
-                <AlertCard
-                  key={alert.id}
-                  alert={alert}
-                  onOpen={() =>
-                    console.log(
-                      "Selected alert:",
-                      alert.title
-                    )
-                  }
-                />
+               {filteredAlerts.map((alert) => (
+                  <AlertCard
+                   key={alert.id}
+                   alert={alert}
+                   onOpen={() => setSelectedAlert(alert)}
+                  />
               ))}
             </div>
-          )}
+         )}
         </section>
       </main>
     </div>
