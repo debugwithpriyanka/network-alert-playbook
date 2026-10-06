@@ -2,6 +2,28 @@ const express = require("express");
 
 const router = express.Router();
 
+function getSeverityClass(severity) {
+  const normalizedSeverity = severity.toUpperCase();
+
+  if (normalizedSeverity === "CRITICAL") {
+    return "critical";
+  }
+
+  if (normalizedSeverity === "HIGH") {
+    return "high";
+  }
+
+  if (normalizedSeverity === "MEDIUM") {
+    return "medium";
+  }
+
+  if (normalizedSeverity === "LOW") {
+    return "low";
+  }
+
+  return "informational";
+}
+
 const alertProcedures = [
   {
     id: 1,
@@ -82,6 +104,41 @@ router.get("/", (req, res) => {
     success: true,
     count: alertProcedures.length,
     data: alertProcedures,
+  });
+});
+
+router.post("/", (req, res) => {
+  const {
+    title,
+    description,
+    severity,
+    notification,
+    escalation,
+  } = req.body;
+
+  if (!title || !description || !severity) {
+    return res.status(400).json({
+      success: false,
+      message: "Title, description and severity are required.",
+    });
+  }
+
+  const newAlert = {
+    id: Date.now(),
+    title: title.toUpperCase(),
+    description,
+    severity: severity.toUpperCase(),
+    severityClass: getSeverityClass(severity),
+    notification: notification || "Based on approved criteria",
+    escalation: escalation || "If required",
+  };
+
+  alertProcedures.push(newAlert);
+
+  res.status(201).json({
+    success: true,
+    message: "Alert procedure created successfully.",
+    data: newAlert,
   });
 });
 

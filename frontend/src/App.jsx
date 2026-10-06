@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Plus } from "lucide-react";
 
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import FilterBar from "./components/FilterBar";
 import AlertCard from "./components/AlertCard";
+import AddAlertModal from "./components/AddAlertModal";
 
-import { getAlerts } from "./services/api";
+import { createAlert, getAlerts } from "./services/api";
 
 function App() {
   const [alerts, setAlerts] = useState([]);
@@ -15,6 +16,14 @@ function App() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [showAddAlert, setShowAddAlert] = useState(false);
+
+  const handleCreateAlert = async (alertData) => {
+  const newAlert = await createAlert(alertData);
+
+  setAlerts((previous) => [...previous, newAlert]);
+  };
 
   useEffect(() => {
     async function loadAlerts() {
@@ -72,35 +81,53 @@ function App() {
       <Header />
 
       <main className="dashboard">
+        {showAddAlert && (
+          <AddAlertModal
+            onClose={() => setShowAddAlert(false)}
+            onCreate={handleCreateAlert}
+          />
+       )}
+
         <section className="search-section">
           <div className="section-intro">
-            <div>
-              <span className="eyebrow">ALERT OPERATIONS</span>
+            <span className="eyebrow">ALERT OPERATIONS</span>
+            <h2>Select an Alert</h2>
 
-              <h2>Select an Alert</h2>
+            <p>
+             Search the alert library or filter procedures by severity
+             and notification requirement.
+            </p>
+          </div>
 
-              <p>
-                Search the alert library or filter procedures by severity
-                and notification requirement.
-              </p>
-            </div>
-
-            <div className="procedure-count">
+         <div className="procedure-actions">
+           <div className="procedure-count">
               <strong>{filteredAlerts.length}</strong>
               <span>Procedures</span>
             </div>
+
+            <button
+             className="add-alert-button"
+             onClick={() => setShowAddAlert(true)}
+              >
+             <Plus size={17} />
+              ADD NEW ALERT
+            </button>
+
           </div>
 
+   
           <SearchBar
-            search={search}
-            setSearch={setSearch}
+           search={search}
+           setSearch={setSearch}
+         />
+
+  
+          <FilterBar
+           selectedFilter={selectedFilter}
+           setSelectedFilter={setSelectedFilter}
           />
 
-          <FilterBar
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-          />
-        </section>
+         </section>
 
         <section className="alert-section">
           <div className="alert-section-header">
