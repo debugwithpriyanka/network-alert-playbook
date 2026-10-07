@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Plus } from "lucide-react";
 
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
