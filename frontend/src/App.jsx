@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleAlert, Plus } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import FilterBar from "./components/FilterBar";
 import AlertCard from "./components/AlertCard";
-import AddAlertModal from "./components/AddAlertModal";
 import AlertProcedureModal from "./components/AlertProcedureModal";
 
-import { createAlert, getAlerts } from "./services/api";
+import { getAlerts } from "./services/api";
 
 function App() {
   const [alerts, setAlerts] = useState([]);
@@ -18,14 +17,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [showAddAlert, setShowAddAlert] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
-
-  const handleCreateAlert = async (alertData) => {
-  const newAlert = await createAlert(alertData);
-
-  setAlerts((previous) => [...previous, newAlert]);
-  };
 
   useEffect(() => {
     async function loadAlerts() {
@@ -83,12 +75,6 @@ function App() {
       <Header />
 
       <main className="dashboard">
-        {showAddAlert && (
-          <AddAlertModal
-            onClose={() => setShowAddAlert(false)}
-            onCreate={handleCreateAlert}
-          />
-       )}
 
         {selectedAlert && (
           <AlertProcedureModal
