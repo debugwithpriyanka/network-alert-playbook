@@ -133,8 +133,35 @@ const createAlert = async (req, res) => {
   }
 };
 
+const deleteAlert = async (req, res) => {
+  try {
+    const alert = await Alert.findByIdAndDelete(req.params.id);
+
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        message: "Alert not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Alert permanently deleted",
+      data: alert,
+    });
+  } catch (error) {
+    console.error("Delete alert error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: "Unable to delete alert. Check the alert ID.",
+    });
+  }
+};
+
 module.exports = {
   getAlerts,
   getAlertById,
   createAlert,
+  deleteAlert,
 };

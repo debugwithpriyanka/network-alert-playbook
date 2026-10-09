@@ -5,9 +5,10 @@ import {
   CircleCheck,
   Flame,
   ShieldAlert,
+  Trash2,
 } from "lucide-react";
 
-function AlertCard({ alert, onOpen }) {
+function AlertCard({ alert, onOpen, onDelete, deleting = false }) {
   const getSeverityIcon = () => {
     if (alert.severityClass === "critical") {
       return <ShieldAlert size={19} />;
@@ -22,6 +23,16 @@ function AlertCard({ alert, onOpen }) {
     }
 
     return <CircleCheck size={19} />;
+  };
+
+  const handleDelete = () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${alert.title}"? This action cannot be undone.`
+    );
+
+    if (confirmed) {
+      onDelete(alert._id);
+    }
   };
 
   return (
@@ -68,15 +79,28 @@ function AlertCard({ alert, onOpen }) {
         </div>
       </div>
 
-      <button
-        className="procedure-button"
-        onClick={() => onOpen(alert)}
-      >
-        VIEW PROCEDURE
-        <ArrowRight size={16} />
-      </button>
+      <div className="alert-card-actions">
+        <button
+          className="procedure-button"
+          onClick={() => onOpen(alert)}
+        >
+          VIEW PROCEDURE
+          <ArrowRight size={16} />
+        </button>
+
+        <button
+          className="delete-alert-button"
+          onClick={handleDelete}
+          disabled={deleting}
+          type="button"
+        >
+          <Trash2 size={16} />
+          {deleting ? "DELETING..." : "DELETE"}
+        </button>
+      </div>
     </article>
   );
 }
 
 export default AlertCard;
+

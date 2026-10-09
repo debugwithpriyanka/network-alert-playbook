@@ -1,12 +1,16 @@
+
 const API_URL = "http://localhost:5000/api";
 
-// GET: Fetch all alerts
+// GET: Fetch all active alerts
 export const getAlerts = async () => {
   const response = await fetch(`${API_URL}/alerts`);
+
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch alerts");
+    throw new Error(
+      result.message || "Failed to fetch alerts"
+    );
   }
 
   return result.data;
@@ -25,13 +29,15 @@ export const createAlert = async (alertData) => {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message || "Failed to create alert");
+    throw new Error(
+      result.message || "Failed to create alert"
+    );
   }
 
   return result.data;
 };
 
-// DELETE: Permanently delete an alert
+
 export const deleteAlert = async (id) => {
   if (!id) {
     throw new Error("Alert ID is required");
@@ -47,9 +53,10 @@ export const deleteAlert = async (id) => {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message || "Failed to delete alert");
+    throw new Error(
+      result.message || "Failed to delete alert"
+    );
   }
 
   return result;
 };
-

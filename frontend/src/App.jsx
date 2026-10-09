@@ -6,8 +6,13 @@ import SearchBar from "./components/SearchBar";
 import FilterBar from "./components/FilterBar";
 import AlertCard from "./components/AlertCard";
 import AlertProcedureModal from "./components/AlertProcedureModal";
+import AddAlertModal from "./components/AddAlertModal";
 
-import { getAlerts } from "./services/api";
+import {
+  getAlerts,
+  createAlert,
+  deleteAlert,
+} from "./services/api";
 
 function App() {
   const [alerts, setAlerts] = useState([]);
@@ -18,6 +23,10 @@ function App() {
   const [error, setError] = useState("");
 
   const [selectedAlert, setSelectedAlert] = useState(null);
+  const [showAddAlert, setShowAddAlert] = useState(false);
+
+  const [deletingAlertId, setDeletingAlertId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     async function loadAlerts() {
@@ -26,7 +35,6 @@ function App() {
         setError("");
 
         const data = await getAlerts();
-
         setAlerts(data);
       } catch (err) {
         console.error(err);
@@ -39,13 +47,48 @@ function App() {
     loadAlerts();
   }, []);
 
+  // Create a new alert
+  const handleCreateAlert = async (alertData) => {
+    const newAlert = await createAlert(alertData);
+
+    setAlerts((previousAlerts) => [
+      newAlert,
+      ...previousAlerts,
+    ]);
+
+    setShowAddAlert(false);
+  };
+
+  // Delete an alert permanently
+  const handleDeleteAlert = async (id) => {
+    try {
+      setDeletingAlertId(id);
+      setDeleteError("");
+
+      await deleteAlert(id);
+
+      setAlerts((previousAlerts) =>
+        previousAlerts.filter((alert) => alert._id !== id)
+      );
+
+      if (selectedAlert?._id === id) {
+        setSelectedAlert(null);
+      }
+    } catch (error) {
+      console.error("Delete alert error:", error);
+      setDeleteError(error.message || "Failed to delete alert.");
+    } finally {
+      setDeletingAlertId(null);
+    }
+  };
+
   const filteredAlerts = useMemo(() => {
     return alerts.filter((alert) => {
       const searchText = search.toLowerCase().trim();
 
       const matchesSearch =
-        alert.title.toLowerCase().includes(searchText) ||
-        alert.description.toLowerCase().includes(searchText);
+        (alert.title || "").toLowerCase().includes(searchText) ||
+        (alert.description || "").toLowerCase().includes(searchText);
 
       let matchesFilter = true;
 
@@ -55,13 +98,13 @@ function App() {
         selectedFilter === "Medium" ||
         selectedFilter === "Low"
       ) {
-        matchesFilter = alert.severity
-          .toUpperCase()
-          .includes(selectedFilter.toUpperCase());
+        matchesFilter =
+          (alert.severity || "").toUpperCase() ===
+          selectedFilter.toUpperCase();
       }
 
       if (selectedFilter === "Customer Notification Required") {
-        matchesFilter = alert.notification
+        matchesFilter = (alert.notification || "")
           .toLowerCase()
           .includes("required");
       }
@@ -75,112 +118,103 @@ function App() {
       <Header />
 
       <main className="dashboard">
-
         {selectedAlert && (
           <AlertProcedureModal
-              alert={selectedAlert}
-              onClose={() => setSelectedAlert(null)}
+            alert={selectedAlert}
+            onClose={() => setSelectedAlert(null)}
           />
-       )}
+        )}
+
+        {showAddAlert && (
+          <AddAlertModal
+            onClose={() => setShowAddAlert(false)}
+            onCreate={handleCreateAlert}
+          />
+        )}
 
         <section className="search-section">
           <div className="section-intro">
             <span className="eyebrow">ALERT OPERATIONS</span>
+
             <h2>Select an Alert</h2>
 
             <p>
-             Search the alert library or filter procedures by severity
-             and notification requirement.
+              Search the alert library or filter procedures by severity
+              and notification requirement.
             </p>
           </div>
 
-         <div className="procedure-actions">
-           <div className="procedure-count">
+          <div className="procedure-actions">
+            <div className="procedure-count">
               <strong>{filteredAlerts.length}</strong>
               <span>Procedures</span>
             </div>
 
             <button
-             className="add-alert-button"
-             onClick={() => setShowAddAlert(true)}
-              >
-             <Plus size={17} />
+              className="add-alert-button"
+              type="button"
+              onClick={() => setShowAddAlert(true)}
+            >
+              <Plus size={17} />
               ADD NEW ALERT
             </button>
-
           </div>
 
-   
           <SearchBar
-           search={search}
-           setSearch={setSearch}
-         />
-
-  
-          <FilterBar
-           selectedFilter={selectedFilter}
-           setSelectedFilter={setSelectedFilter}
+            search={search}
+            setSearch={setSearch}
           />
 
-         </section>
+          <FilterBar
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+          />
+        </section>
 
         <section className="alert-section">
-          <div className="alert-section-header">
-            <div>
-              <span className="eyebrow">SOP LIBRARY</span>
-
-              <h2>Alert Procedures</h2>
-            </div>
-
-            {!loading && !error && (
-              <span className="results-label">
-                Showing {filteredAlerts.length} procedures
-              </span>
-            )}
-          </div>
-
           {loading && (
-            <div className="empty-state">
-              <h3>Loading alert procedures...</h3>
-              <p>
-                Connecting to the alert management service.
-              </p>
+            <div className="status-message">
+              Loading alert procedures...
             </div>
           )}
 
           {!loading && error && (
-            <div className="empty-state">
-              <CircleAlert size={30} />
-
-              <h3>Unable to load alerts</h3>
-
-              <p>{error}</p>
+            <div className="error-message">
+              {error}
             </div>
+          )}
+
+          {!loading && !error && deleteError && (
+            <p className="error-message" role="alert">
+              {deleteError}
+            </p>
           )}
 
           {!loading && !error && filteredAlerts.length === 0 && (
             <div className="empty-state">
-              <CircleAlert size={30} />
+              <CircleAlert size={32} />
 
-              <h3>No alert procedures found</h3>
+              <h3>No alerts found</h3>
 
               <p>
-                Try another search term or select a different filter.
+                Try changing your search or filter, or add a new alert.
               </p>
             </div>
           )}
 
           {!loading && !error && filteredAlerts.length > 0 && (
             <div className="alert-grid">
-               {filteredAlerts.map((alert) => (
-                  <AlertCard
-                   key={alert.id}
-                   alert={alert}
-                   onOpen={() => setSelectedAlert(alert)}
-                  />
+              {filteredAlerts.map((alert) => (
+                <AlertCard
+                  key={alert._id}
+                  alert={alert}
+                  onOpen={() => setSelectedAlert(alert)}
+                  onDelete={handleDeleteAlert}
+                  deleting={deletingAlertId === alert._id}
+                />
               ))}
             </div>
-         )}
+          )}
         </section>
       </main>
     </div>
@@ -188,3 +222,4 @@ function App() {
 }
 
 export default App;
+

@@ -874,11 +874,10 @@ button {
 
 .procedure-actions {
   width: 100%;
-
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-
   gap: 20px;
   margin-bottom: 20px;
 }
@@ -1517,3 +1516,138 @@ button {
     font-size: 18px;
   }
 }
+
+
+/* Add Alert form fields */
+.add-alert-modal form > label {
+  display: block;
+  margin-bottom: 18px;
+  color: #b9c9d8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.add-alert-modal form > label input,
+.add-alert-modal form > label textarea,
+.add-alert-modal form > label select {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  padding: 11px 12px;
+  border: 1px solid #1d3852;
+  border-radius: 7px;
+  outline: none;
+  background: #081625;
+  color: #e7f0f8;
+  font: inherit;
+  font-size: 13px;
+}
+
+.add-alert-modal form > label input,
+.add-alert-modal form > label select {
+  height: 42px;
+}
+
+.add-alert-modal form > label textarea {
+  min-height: 85px;
+  resize: vertical;
+}
+
+.add-alert-modal form > label input:focus,
+.add-alert-modal form > label textarea:focus,
+.add-alert-modal form > label select:focus {
+  border-color: #19c5ef;
+  box-shadow: 0 0 0 3px rgba(25, 197, 239, 0.07);
+}
+
+.form-error {
+  margin-bottom: 15px;
+  color: #f87171;
+  font-size: 13px;
+}
+
+.cancel-button,
+.save-alert-button {
+  min-height: 40px;
+  padding: 0 15px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cancel-button {
+  border: 1px solid #263f56;
+  background: #0d2032;
+  color: #a8bac9;
+}
+
+.save-alert-button {
+  border: 1px solid #18b9df;
+  background: #0c7896;
+  color: #ffffff;
+}
+
+.save-alert-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alert card action buttons */
+.alert-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.alert-card-actions .procedure-button {
+  flex: 1;
+}
+
+.delete-alert-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 100, 100, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 75, 75, 0.08);
+  color: #ff8585;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.delete-alert-button:hover:not(:disabled) {
+  background: rgba(255, 75, 75, 0.17);
+  border-color: rgba(255, 100, 100, 0.7);
+}
+
+.delete-alert-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #ff8585;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .alert-card-actions {
+    flex-wrap: wrap;
+  }
+
+  .alert-card-actions .procedure-button {
+    flex: 1 1 100%;
+  }
+
+  .delete-alert-button {
+    flex: 1;
+  }
+}
+
