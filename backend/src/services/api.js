@@ -37,7 +37,6 @@ export const createAlert = async (alertData) => {
   return result.data;
 };
 
-
 export const deleteAlert = async (id) => {
   if (!id) {
     throw new Error("Alert ID is required");
@@ -60,3 +59,7 @@ export const deleteAlert = async (id) => {
 
   return result;
 };
+
+
+
+

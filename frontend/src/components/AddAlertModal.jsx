@@ -1,15 +1,22 @@
+
 import { useState } from "react";
 
-function AddAlertModal({ onClose, onCreate }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    severity: "MEDIUM",
-    notification: "",
-    escalation: "",
-    checks: "",
-    actions: "",
-  });
+function AddAlertModal({ onClose, onCreate, onUpdate, alert = null }) {
+  const isEditing = Boolean(alert);
+
+  const [formData, setFormData] = useState(() => ({
+    title: alert?.title || "",
+    description: alert?.description || "",
+    severity: (alert?.severity || "MEDIUM").toUpperCase(),
+    notification: alert?.notification || "",
+    escalation: alert?.escalation || "",
+    checks: Array.isArray(alert?.checks)
+      ? alert.checks.join("\n")
+      : "",
+    actions: Array.isArray(alert?.actions)
+      ? alert.actions.join("\n")
+      : "",
+  }));
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -31,11 +38,11 @@ function AddAlertModal({ onClose, onCreate }) {
       setError("");
 
       const alertData = {
-        title: formData.title,
-        description: formData.description,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
         severity: formData.severity,
-        notification: formData.notification,
-        escalation: formData.escalation,
+        notification: formData.notification.trim(),
+        escalation: formData.escalation.trim(),
 
         checks: formData.checks
           .split("\n")
@@ -48,12 +55,19 @@ function AddAlertModal({ onClose, onCreate }) {
           .filter(Boolean),
       };
 
-      await onCreate(alertData);
+      if (isEditing) {
+        await onUpdate(alert._id, alertData);
+      } else {
+        await onCreate(alertData);
+      }
 
       onClose();
     } catch (err) {
       console.error(err);
-      setError(err.message || "Failed to create alert.");
+      setError(
+        err.message ||
+          `Failed to ${isEditing ? "update" : "create"} alert.`
+      );
     } finally {
       setSaving(false);
     }
@@ -68,7 +82,7 @@ function AddAlertModal({ onClose, onCreate }) {
         <div className="modal-header">
           <div>
             <span className="eyebrow">ALERT MANAGEMENT</span>
-            <h2>Add New Alert</h2>
+            <h2>{isEditing ? "Edit Alert" : "Add New Alert"}</h2>
           </div>
 
           <button
@@ -109,14 +123,13 @@ function AddAlertModal({ onClose, onCreate }) {
               name="severity"
               value={formData.severity}
               onChange={handleChange}
+              required
             >
               <option value="CRITICAL">CRITICAL</option>
               <option value="HIGH">HIGH</option>
               <option value="MEDIUM">MEDIUM</option>
               <option value="LOW">LOW</option>
-              <option value="INFORMATIONAL">
-                INFORMATIONAL
-              </option>
+              <option value="INFORMATIONAL">INFORMATIONAL</option>
             </select>
           </label>
 
@@ -160,7 +173,11 @@ function AddAlertModal({ onClose, onCreate }) {
             />
           </label>
 
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
 
           <div className="modal-actions">
             <button
@@ -176,7 +193,11 @@ function AddAlertModal({ onClose, onCreate }) {
               className="save-alert-button"
               disabled={saving}
             >
-              {saving ? "SAVING..." : "CREATE ALERT"}
+              {saving
+                ? "SAVING..."
+                : isEditing
+                  ? "SAVE CHANGES"
+                  : "CREATE ALERT"}
             </button>
           </div>
         </form>

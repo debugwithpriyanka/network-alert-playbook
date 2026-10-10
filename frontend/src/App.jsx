@@ -11,6 +11,7 @@ import AddAlertModal from "./components/AddAlertModal";
 import {
   getAlerts,
   createAlert,
+  updateAlert,
   deleteAlert,
 } from "./services/api";
 
@@ -24,6 +25,7 @@ function App() {
 
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [showAddAlert, setShowAddAlert] = useState(false);
+  const [alertToEdit, setAlertToEdit] = useState(null);
 
   const [deletingAlertId, setDeletingAlertId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
@@ -58,6 +60,19 @@ function App() {
 
     setShowAddAlert(false);
   };
+
+  // Update an existing alert
+const handleUpdateAlert = async (id, alertData) => {
+  const updatedAlert = await updateAlert(id, alertData);
+
+  setAlerts((previousAlerts) =>
+    previousAlerts.map((alert) =>
+      alert._id === id ? updatedAlert : alert
+    )
+  );
+
+  setAlertToEdit(null);
+};
 
   // Delete an alert permanently
   const handleDeleteAlert = async (id) => {
@@ -125,13 +140,18 @@ function App() {
           />
         )}
 
-        {showAddAlert && (
+        {(showAddAlert || alertToEdit) && (
           <AddAlertModal
-            onClose={() => setShowAddAlert(false)}
+            key={alertToEdit?._id || "new-alert"}
+            alert={alertToEdit}
+            onClose={() => {
+            setShowAddAlert(false);
+            setAlertToEdit(null);
+        }}
             onCreate={handleCreateAlert}
-          />
-        )}
-
+            onUpdate={handleUpdateAlert}
+         />
+       )}
         <section className="search-section">
           <div className="section-intro">
             <span className="eyebrow">ALERT OPERATIONS</span>
@@ -209,6 +229,10 @@ function App() {
                   key={alert._id}
                   alert={alert}
                   onOpen={() => setSelectedAlert(alert)}
+                  onEdit={(selected) => {
+                    setShowAddAlert(false);
+                    setAlertToEdit(selected);
+                  }}
                   onDelete={handleDeleteAlert}
                   deleting={deletingAlertId === alert._id}
                 />

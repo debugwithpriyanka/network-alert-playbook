@@ -1651,3 +1651,23 @@ button {
   }
 }
 
+.edit-alert-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #64748b;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.edit-alert-button:hover {
+  background-color: rgba(100, 116, 139, 0.12);
+}

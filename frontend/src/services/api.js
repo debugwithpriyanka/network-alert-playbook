@@ -53,3 +53,30 @@ export const deleteAlert = async (id) => {
   return result;
 };
 
+
+export const updateAlert = async (id, alertData) => {
+  if (!id) {
+    throw new Error("Alert ID is required");
+  }
+
+  const response = await fetch(
+    `${API_URL}/alerts/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(alertData),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to update alert"
+    );
+  }
+
+  return result.data;
+};

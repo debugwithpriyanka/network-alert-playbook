@@ -4,11 +4,18 @@ import {
   CircleAlert,
   CircleCheck,
   Flame,
+  Pencil,
   ShieldAlert,
   Trash2,
 } from "lucide-react";
 
-function AlertCard({ alert, onOpen, onDelete, deleting = false }) {
+function AlertCard({
+  alert,
+  onOpen,
+  onEdit,
+  onDelete,
+  deleting = false,
+}) {
   const getSeverityIcon = () => {
     if (alert.severityClass === "critical") {
       return <ShieldAlert size={19} />;
@@ -86,6 +93,15 @@ function AlertCard({ alert, onOpen, onDelete, deleting = false }) {
         >
           VIEW PROCEDURE
           <ArrowRight size={16} />
+        </button>
+
+        <button
+          className="edit-alert-button"
+          type="button"
+          onClick={() => onEdit(alert)}
+        >
+          <Pencil size={16} />
+            EDIT
         </button>
 
         <button
