@@ -1,26 +1,23 @@
+
 const Alert = require("../models/Alert");
+const AlertActivity = require("../models/AlertActivity");
 
 function getSeverityClass(severity) {
   switch (severity) {
     case "CRITICAL":
       return "critical";
-
     case "HIGH":
       return "high";
-
     case "MEDIUM":
       return "medium";
-
     case "LOW":
       return "low";
-
     case "INFORMATIONAL":
       return "informational";
-
     default:
       return "informational";
   }
-};
+}
 
 // GET /api/alerts
 const getAlerts = async (req, res) => {
@@ -28,7 +25,7 @@ const getAlerts = async (req, res) => {
     const alerts = await Alert.find({ active: true })
       .sort({ createdAt: -1 });
 
-    res.json({
+    return res.status(200).json({
       success: true,
       count: alerts.length,
       data: alerts,
@@ -36,7 +33,7 @@ const getAlerts = async (req, res) => {
   } catch (error) {
     console.error("Get alerts error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch alerts",
     });
@@ -55,12 +52,21 @@ const getAlertById = async (req, res) => {
       });
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       data: alert,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Get alert by ID error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid alert ID",
+      });
+    }
+
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch alert",
     });
@@ -80,74 +86,6 @@ const createAlert = async (req, res) => {
       actions,
     } = req.body;
 
-    if (!title || !description || !severity) {
-      return res.status(400).json({
-        success: false,
-        message: "Title, description and severity are required",
-      });
-    }
-
-    const normalizedSeverity = severity.toUpperCase();
-
-    const allowedSeverities = [
-      "CRITICAL",
-      "HIGH",
-      "MEDIUM",
-      "LOW",
-      "INFORMATIONAL",
-    ];
-
-    if (!allowedSeverities.includes(normalizedSeverity)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid severity",
-      });
-    }
-
-    const alert = await Alert.create({
-      title,
-      description,
-      severity: normalizedSeverity,
-
-      // Automatically generated.
-      severityClass: getSeverityClass(normalizedSeverity),
-
-      notification,
-      escalation,
-      checks,
-      actions,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Alert created successfully",
-      data: alert,
-    });
-  } catch (error) {
-    console.error("Create alert error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create alert",
-    });
-  }
-};
-
-
- // PUT /api/alerts/:id
-const updateAlert = async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      severity,
-      notification,
-      escalation,
-      checks,
-      actions,
-    } = req.body;
-
-    // Validate required fields
     if (
       typeof title !== "string" ||
       !title.trim() ||
@@ -162,7 +100,6 @@ const updateAlert = async (req, res) => {
       });
     }
 
-    // Normalize and validate severity
     const normalizedSeverity = severity.trim().toUpperCase();
 
     const allowedSeverities = [
@@ -180,7 +117,6 @@ const updateAlert = async (req, res) => {
       });
     }
 
-    // Validate optional list fields
     if (
       (checks !== undefined &&
         (!Array.isArray(checks) ||
@@ -195,7 +131,104 @@ const updateAlert = async (req, res) => {
       });
     }
 
-    // Update the existing MongoDB document
+    const alert = await Alert.create({
+      title: title.trim(),
+      description: description.trim(),
+      severity: normalizedSeverity,
+      severityClass: getSeverityClass(normalizedSeverity),
+      notification,
+      escalation,
+      checks,
+      actions,
+    });
+
+    await AlertActivity.create({
+      alertId: alert._id,
+      alertTitle: alert.title,
+      action: "CREATED",
+      description: `Alert "${alert.title}" was created.`,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Alert created successfully",
+      data: alert,
+    });
+  } catch (error) {
+    console.error("Create alert error:", error);
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid alert data",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create alert",
+    });
+  }
+};
+
+// PUT /api/alerts/:id
+const updateAlert = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      severity,
+      notification,
+      escalation,
+      checks,
+      actions,
+    } = req.body;
+
+    if (
+      typeof title !== "string" ||
+      !title.trim() ||
+      typeof description !== "string" ||
+      !description.trim() ||
+      typeof severity !== "string" ||
+      !severity.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, description and severity are required",
+      });
+    }
+
+    const normalizedSeverity = severity.trim().toUpperCase();
+
+    const allowedSeverities = [
+      "CRITICAL",
+      "HIGH",
+      "MEDIUM",
+      "LOW",
+      "INFORMATIONAL",
+    ];
+
+    if (!allowedSeverities.includes(normalizedSeverity)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid severity",
+      });
+    }
+
+    if (
+      (checks !== undefined &&
+        (!Array.isArray(checks) ||
+          !checks.every((item) => typeof item === "string"))) ||
+      (actions !== undefined &&
+        (!Array.isArray(actions) ||
+          !actions.every((item) => typeof item === "string")))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Checks and actions must be arrays of strings",
+      });
+    }
+
     const alert = await Alert.findByIdAndUpdate(
       req.params.id,
       {
@@ -220,6 +253,13 @@ const updateAlert = async (req, res) => {
         message: "Alert not found",
       });
     }
+
+    await AlertActivity.create({
+      alertId: alert._id,
+      alertTitle: alert.title,
+      action: "UPDATED",
+      description: `Alert "${alert.title}" was updated.`,
+    });
 
     return res.status(200).json({
       success: true,
@@ -246,6 +286,46 @@ const updateAlert = async (req, res) => {
   }
 };
 
+
+ // GET /api/alerts/:id/activity
+const getAlertActivity = async (req, res) => {
+  try {
+    const alert = await Alert.findById(req.params.id);
+
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        message: "Alert not found",
+      });
+    }
+
+    const activities = await AlertActivity.find({
+      alertId: alert._id,
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: activities.length,
+      data: activities,
+    });
+  } catch (error) {
+    console.error("Get alert activity error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid alert ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch alert activity",
+    });
+  }
+};
+
+// DELETE /api/alerts/:id
 const deleteAlert = async (req, res) => {
   try {
     const alert = await Alert.findByIdAndDelete(req.params.id);
@@ -265,9 +345,16 @@ const deleteAlert = async (req, res) => {
   } catch (error) {
     console.error("Delete alert error:", error);
 
-    return res.status(400).json({
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid alert ID",
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Unable to delete alert. Check the alert ID.",
+      message: "Unable to delete alert",
     });
   }
 };
@@ -277,5 +364,6 @@ module.exports = {
   getAlertById,
   createAlert,
   updateAlert,
+  getAlertActivity,
   deleteAlert,
 };
