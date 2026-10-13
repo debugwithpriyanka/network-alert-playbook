@@ -37,6 +37,23 @@ export const createAlert = async (alertData) => {
   return result.data;
 };
 
+
+export const getAlertActivity = async (alertId) => {
+  const response = await fetch(
+    `${API_URL}/alerts/${alertId}/activity`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch alert activity"
+    );
+  }
+
+  return result;
+};
+
 export const deleteAlert = async (id) => {
   if (!id) {
     throw new Error("Alert ID is required");
