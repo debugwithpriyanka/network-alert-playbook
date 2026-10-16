@@ -7,6 +7,7 @@ import FilterBar from "./components/FilterBar";
 import AlertCard from "./components/AlertCard";
 import AlertProcedureModal from "./components/AlertProcedureModal";
 import AddAlertModal from "./components/AddAlertModal";
+import AlertActivity from "./components/AlertActivity";
 
 import {
   getAlerts,
@@ -26,6 +27,8 @@ function App() {
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [showAddAlert, setShowAddAlert] = useState(false);
   const [alertToEdit, setAlertToEdit] = useState(null);
+
+  const [historyAlert, setHistoryAlert] = useState(null);
 
   const [deletingAlertId, setDeletingAlertId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
@@ -140,6 +143,14 @@ const handleUpdateAlert = async (id, alertData) => {
           />
         )}
 
+        {historyAlert && (
+          <AlertActivity
+            key={historyAlert._id}
+            alertId={historyAlert._id}
+            onClose={() => setHistoryAlert(null)}
+         />
+       )}
+
         {(showAddAlert || alertToEdit) && (
           <AddAlertModal
             key={alertToEdit?._id || "new-alert"}
@@ -233,6 +244,8 @@ const handleUpdateAlert = async (id, alertData) => {
                     setShowAddAlert(false);
                     setAlertToEdit(selected);
                   }}
+
+                  onHistory={(selected) => setHistoryAlert(selected)}
                   onDelete={handleDeleteAlert}
                   deleting={deletingAlertId === alert._id}
                 />

@@ -31,29 +31,6 @@ export const createAlert = async (alertData) => {
   return result.data;
 };
 
-// DELETE: Permanently delete an alert
-export const deleteAlert = async (id) => {
-  if (!id) {
-    throw new Error("Alert ID is required");
-  }
-
-  const response = await fetch(
-    `${API_URL}/alerts/${encodeURIComponent(id)}`,
-    {
-      method: "DELETE",
-    }
-  );
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to delete alert");
-  }
-
-  return result;
-};
-
-
 export const updateAlert = async (id, alertData) => {
   if (!id) {
     throw new Error("Alert ID is required");
@@ -80,3 +57,49 @@ export const updateAlert = async (id, alertData) => {
 
   return result.data;
 };
+
+ 
+// GET: Fetch activity history for a specific alert
+export const getAlertActivity = async (alertId) => {
+  if (!alertId) {
+    throw new Error("Alert ID is required");
+  }
+
+  const response = await fetch(
+    `${API_URL}/alerts/${encodeURIComponent(alertId)}/activity`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch alert activity"
+    );
+  }
+
+  return result;
+};
+
+// DELETE: Permanently delete an alert
+export const deleteAlert = async (id) => {
+  if (!id) {
+    throw new Error("Alert ID is required");
+  }
+
+  const response = await fetch(
+    `${API_URL}/alerts/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to delete alert");
+  }
+
+  return result;
+};
+
+

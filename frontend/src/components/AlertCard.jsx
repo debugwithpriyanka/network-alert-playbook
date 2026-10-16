@@ -4,6 +4,7 @@ import {
   CircleAlert,
   CircleCheck,
   Flame,
+  History,
   Pencil,
   ShieldAlert,
   Trash2,
@@ -14,6 +15,7 @@ function AlertCard({
   onOpen,
   onEdit,
   onDelete,
+  onHistory,
   deleting = false,
 }) {
   const getSeverityIcon = () => {
@@ -102,6 +104,15 @@ function AlertCard({
         >
           <Pencil size={16} />
             EDIT
+        </button>
+
+        <button
+         className="history-alert-button"
+         type="button"
+         onClick={() => onHistory(alert)}
+        >
+         <History size={16} />
+           HISTORY
         </button>
 
         <button
