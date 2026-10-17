@@ -328,7 +328,7 @@ const getAlertActivity = async (req, res) => {
 // DELETE /api/alerts/:id
 const deleteAlert = async (req, res) => {
   try {
-    const alert = await Alert.findByIdAndDelete(req.params.id);
+    const alert = await Alert.findById(req.params.id);
 
     if (!alert) {
       return res.status(404).json({
@@ -336,6 +336,17 @@ const deleteAlert = async (req, res) => {
         message: "Alert not found",
       });
     }
+
+    // Save the deletion event before deleting the alert.
+    await AlertActivity.create({
+      alertId: alert._id,
+      alertTitle: alert.title,
+      action: "DELETED",
+      description: `Alert "${alert.title}" was permanently deleted.`,
+    });
+
+    // Delete the alert only after the history entry is saved.
+    await Alert.findByIdAndDelete(alert._id);
 
     return res.status(200).json({
       success: true,
@@ -345,19 +356,13 @@ const deleteAlert = async (req, res) => {
   } catch (error) {
     console.error("Delete alert error:", error);
 
-    if (error.name === "CastError") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid alert ID",
-      });
-    }
-
     return res.status(500).json({
       success: false,
       message: "Unable to delete alert",
     });
   }
 };
+
 
 module.exports = {
   getAlerts,

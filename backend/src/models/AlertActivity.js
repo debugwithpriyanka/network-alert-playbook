@@ -19,7 +19,7 @@ const alertActivitySchema = new mongoose.Schema(
     action: {
       type: String,
       required: true,
-      enum: ["CREATED", "UPDATED"],
+      enum: ["CREATED", "UPDATED", "DELETED"],
     },
 
     description: {
