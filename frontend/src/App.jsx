@@ -16,6 +16,35 @@ import {
   deleteAlert,
 } from "./services/api";
 
+
+function AlertSummary({ alerts }) {
+  const activeCount = alerts.filter(
+    (alert) => alert.active !== false
+  ).length;
+
+  const criticalCount = alerts.filter(
+    (alert) =>
+      alert.active !== false &&
+      alert.severity?.toUpperCase() === "CRITICAL"
+  ).length;
+
+  return (
+    <section className="alert-summary">
+      <div className="summary-card">
+        <span>Active Alerts</span>
+        <strong>{String(activeCount).padStart(2, "0")}</strong>
+        <p className="summary-status">Monitoring status</p>
+      </div>
+
+      <div className="summary-card">
+        <span>Critical Alerts</span>
+        <strong>{String(criticalCount).padStart(2, "0")}</strong>
+        <p className="critical-status">Requires attention</p>
+      </div>
+    </section>
+  );
+}
+
 function App() {
   const [alerts, setAlerts] = useState([]);
   const [search, setSearch] = useState("");
@@ -163,6 +192,8 @@ const handleUpdateAlert = async (id, alertData) => {
             onUpdate={handleUpdateAlert}
          />
        )}
+
+
         <section className="search-section">
           <div className="section-intro">
             <span className="eyebrow">ALERT OPERATIONS</span>
@@ -201,6 +232,8 @@ const handleUpdateAlert = async (id, alertData) => {
             setSelectedFilter={setSelectedFilter}
           />
         </section>
+
+        <AlertSummary alerts={alerts} />
 
         <section className="alert-section">
           {loading && (
