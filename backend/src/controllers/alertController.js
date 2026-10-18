@@ -1,4 +1,4 @@
-
+const mongoose = require("mongoose");
 const Alert = require("../models/Alert");
 const AlertActivity = require("../models/AlertActivity");
 
@@ -19,6 +19,65 @@ function getSeverityClass(severity) {
   }
 }
 
+const allowedSeverities = [
+  "CRITICAL",
+  "HIGH",
+  "MEDIUM",
+  "LOW",
+  "INFORMATIONAL",
+];
+
+function validateAlertBody(body) {
+  const { title, description, severity, checks, actions } = body;
+
+  if (
+    typeof title !== "string" ||
+    !title.trim() ||
+    typeof description !== "string" ||
+    !description.trim() ||
+    typeof severity !== "string" ||
+    !severity.trim()
+  ) {
+    return "Title, description and severity are required";
+  }
+
+  if (!allowedSeverities.includes(severity.trim().toUpperCase())) {
+    return "Invalid severity";
+  }
+
+  if (
+    (checks !== undefined &&
+      (!Array.isArray(checks) ||
+        !checks.every((item) => typeof item === "string"))) ||
+    (actions !== undefined &&
+      (!Array.isArray(actions) ||
+        !actions.every((item) => typeof item === "string")))
+  ) {
+    return "Checks and actions must be arrays of strings";
+  }
+
+  return null;
+}
+
+function getAlertData(body) {
+  const severity = body.severity.trim().toUpperCase();
+
+  return {
+    title: body.title.trim(),
+    description: body.description.trim(),
+    severity,
+    severityClass: getSeverityClass(severity),
+    notification: body.notification,
+    escalation: body.escalation,
+    checks: body.checks,
+    actions: body.actions,
+  };
+}
+
+function isInvalidId(id) {
+  return !id || !mongoose.isValidObjectId(id);
+}
+
 // GET /api/alerts
 const getAlerts = async (req, res) => {
   try {
@@ -32,7 +91,6 @@ const getAlerts = async (req, res) => {
     });
   } catch (error) {
     console.error("Get alerts error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch alerts",
@@ -43,6 +101,13 @@ const getAlerts = async (req, res) => {
 // GET /api/alerts/:id
 const getAlertById = async (req, res) => {
   try {
+    if (isInvalidId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid alert ID",
+      });
+    }
+
     const alert = await Alert.findById(req.params.id);
 
     if (!alert) {
@@ -58,14 +123,6 @@ const getAlertById = async (req, res) => {
     });
   } catch (error) {
     console.error("Get alert by ID error:", error);
-
-    if (error.name === "CastError") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid alert ID",
-      });
-    }
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch alert",
@@ -75,78 +132,41 @@ const getAlertById = async (req, res) => {
 
 // POST /api/alerts
 const createAlert = async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      severity,
-      notification,
-      escalation,
-      checks,
-      actions,
-    } = req.body;
+  const validationError = validateAlertBody(req.body);
 
-    if (
-      typeof title !== "string" ||
-      !title.trim() ||
-      typeof description !== "string" ||
-      !description.trim() ||
-      typeof severity !== "string" ||
-      !severity.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Title, description and severity are required",
-      });
-    }
-
-    const normalizedSeverity = severity.trim().toUpperCase();
-
-    const allowedSeverities = [
-      "CRITICAL",
-      "HIGH",
-      "MEDIUM",
-      "LOW",
-      "INFORMATIONAL",
-    ];
-
-    if (!allowedSeverities.includes(normalizedSeverity)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid severity",
-      });
-    }
-
-    if (
-      (checks !== undefined &&
-        (!Array.isArray(checks) ||
-          !checks.every((item) => typeof item === "string"))) ||
-      (actions !== undefined &&
-        (!Array.isArray(actions) ||
-          !actions.every((item) => typeof item === "string")))
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Checks and actions must be arrays of strings",
-      });
-    }
-
-    const alert = await Alert.create({
-      title: title.trim(),
-      description: description.trim(),
-      severity: normalizedSeverity,
-      severityClass: getSeverityClass(normalizedSeverity),
-      notification,
-      escalation,
-      checks,
-      actions,
+  if (validationError) {
+    return res.status(400).json({
+      success: false,
+      message: validationError,
     });
+  }
 
-    await AlertActivity.create({
-      alertId: alert._id,
-      alertTitle: alert.title,
-      action: "CREATED",
-      description: `Alert "${alert.title}" was created.`,
+  let session;
+
+  try {
+    session = await mongoose.startSession();
+
+    let alert;
+
+    await session.withTransaction(async () => {
+      const [createdAlert] = await Alert.create(
+        [getAlertData(req.body)],
+        { session }
+      );
+
+      await AlertActivity.create(
+        [
+          {
+            alertId: createdAlert._id,
+            alertTitle: createdAlert.title,
+            action: "CREATED",
+            description: `Alert "${createdAlert.title}" was created.`,
+          },
+        ],
+        { session }
+      );
+
+      alert = createdAlert;
     });
 
     return res.status(201).json({
@@ -168,84 +188,69 @@ const createAlert = async (req, res) => {
       success: false,
       message: "Failed to create alert",
     });
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 };
 
 // PUT /api/alerts/:id
 const updateAlert = async (req, res) => {
+  const { id } = req.params;
+
+  if (isInvalidId(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid alert ID",
+    });
+  }
+
+  const validationError = validateAlertBody(req.body);
+
+  if (validationError) {
+    return res.status(400).json({
+      success: false,
+      message: validationError,
+    });
+  }
+
+  let session;
+
   try {
-    const {
-      title,
-      description,
-      severity,
-      notification,
-      escalation,
-      checks,
-      actions,
-    } = req.body;
+    session = await mongoose.startSession();
 
-    if (
-      typeof title !== "string" ||
-      !title.trim() ||
-      typeof description !== "string" ||
-      !description.trim() ||
-      typeof severity !== "string" ||
-      !severity.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Title, description and severity are required",
-      });
-    }
+    let alert;
 
-    const normalizedSeverity = severity.trim().toUpperCase();
+    await session.withTransaction(async () => {
+      const updatedAlert = await Alert.findByIdAndUpdate(
+        id,
+        getAlertData(req.body),
+        {
+          new: true,
+          runValidators: true,
+          session,
+        }
+      );
 
-    const allowedSeverities = [
-      "CRITICAL",
-      "HIGH",
-      "MEDIUM",
-      "LOW",
-      "INFORMATIONAL",
-    ];
-
-    if (!allowedSeverities.includes(normalizedSeverity)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid severity",
-      });
-    }
-
-    if (
-      (checks !== undefined &&
-        (!Array.isArray(checks) ||
-          !checks.every((item) => typeof item === "string"))) ||
-      (actions !== undefined &&
-        (!Array.isArray(actions) ||
-          !actions.every((item) => typeof item === "string")))
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Checks and actions must be arrays of strings",
-      });
-    }
-
-    const alert = await Alert.findByIdAndUpdate(
-      req.params.id,
-      {
-        title: title.trim(),
-        description: description.trim(),
-        severity: normalizedSeverity,
-        severityClass: getSeverityClass(normalizedSeverity),
-        notification,
-        escalation,
-        checks,
-        actions,
-      },
-      {
-        new: true,
-        runValidators: true,
+      if (!updatedAlert) {
+        return;
       }
-    );
+
+      await AlertActivity.create(
+        [
+          {
+            alertId: updatedAlert._id,
+            alertTitle: updatedAlert.title,
+            action: "UPDATED",
+            description: `Alert "${updatedAlert.title}" was updated.`,
+          },
+        ],
+        { session }
+      );
+
+      alert = updatedAlert;
+    });
 
     if (!alert) {
       return res.status(404).json({
@@ -253,13 +258,6 @@ const updateAlert = async (req, res) => {
         message: "Alert not found",
       });
     }
-
-    await AlertActivity.create({
-      alertId: alert._id,
-      alertTitle: alert.title,
-      action: "UPDATED",
-      description: `Alert "${alert.title}" was updated.`,
-    });
 
     return res.status(200).json({
       success: true,
@@ -269,10 +267,7 @@ const updateAlert = async (req, res) => {
   } catch (error) {
     console.error("Update alert error:", error);
 
-    if (
-      error.name === "CastError" ||
-      error.name === "ValidationError"
-    ) {
+    if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
         message: "Invalid alert ID or alert data",
@@ -283,23 +278,25 @@ const updateAlert = async (req, res) => {
       success: false,
       message: "Failed to update alert",
     });
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 };
 
-
- // GET /api/alerts/:id/activity
+// GET /api/alerts/:id/activity
 const getAlertActivity = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id || !require("mongoose").isValidObjectId(id)) {
+    if (isInvalidId(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid alert ID",
       });
     }
 
-    // Check history first, because the alert may already be deleted.
     const activities = await AlertActivity.find({
       alertId: id,
     }).sort({ createdAt: -1 });
@@ -312,7 +309,6 @@ const getAlertActivity = async (req, res) => {
       });
     }
 
-    // If there is no history, check whether the alert still exists.
     const alert = await Alert.findById(id);
 
     if (!alert) {
@@ -337,43 +333,59 @@ const getAlertActivity = async (req, res) => {
   }
 };
 
-
- // DELETE /api/alerts/:id
+// DELETE /api/alerts/:id
 const deleteAlert = async (req, res) => {
+  const { id } = req.params;
+
+  if (isInvalidId(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid alert ID",
+    });
+  }
+
+  let session;
+
   try {
-    const { id } = req.params;
+    session = await mongoose.startSession();
 
-    // Validate the ID before querying MongoDB.
-    if (!id || !require("mongoose").isValidObjectId(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid alert ID",
-      });
-    }
+    let deletedAlert;
 
-    const alert = await Alert.findById(id);
+    await session.withTransaction(async () => {
+      const alert = await Alert.findById(id).session(session);
 
-    if (!alert) {
+      if (!alert) {
+        return;
+      }
+
+      await AlertActivity.create(
+        [
+          {
+            alertId: alert._id,
+            alertTitle: alert.title,
+            action: "DELETED",
+            description: `Alert "${alert.title}" was permanently deleted.`,
+          },
+        ],
+        { session }
+      );
+
+      await Alert.deleteOne({ _id: alert._id }, { session });
+
+      deletedAlert = alert;
+    });
+
+    if (!deletedAlert) {
       return res.status(404).json({
         success: false,
         message: "Alert not found",
       });
     }
 
-    // Save the deletion event before deleting the alert.
-    await AlertActivity.create({
-      alertId: alert._id,
-      alertTitle: alert.title,
-      action: "DELETED",
-      description: `Alert "${alert.title}" was permanently deleted.`,
-    });
-
-    await Alert.findByIdAndDelete(alert._id);
-
     return res.status(200).json({
       success: true,
       message: "Alert permanently deleted",
-      data: alert,
+      data: deletedAlert,
     });
   } catch (error) {
     console.error("Delete alert error:", error);
@@ -382,10 +394,12 @@ const deleteAlert = async (req, res) => {
       success: false,
       message: "Unable to delete alert",
     });
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 };
-
-
 
 module.exports = {
   getAlerts,
