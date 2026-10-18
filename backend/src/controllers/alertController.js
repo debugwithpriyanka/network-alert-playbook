@@ -325,10 +325,21 @@ const getAlertActivity = async (req, res) => {
   }
 };
 
-// DELETE /api/alerts/:id
+
+ // DELETE /api/alerts/:id
 const deleteAlert = async (req, res) => {
   try {
-    const alert = await Alert.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate the ID before querying MongoDB.
+    if (!id || !require("mongoose").isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid alert ID",
+      });
+    }
+
+    const alert = await Alert.findById(id);
 
     if (!alert) {
       return res.status(404).json({
@@ -345,7 +356,6 @@ const deleteAlert = async (req, res) => {
       description: `Alert "${alert.title}" was permanently deleted.`,
     });
 
-    // Delete the alert only after the history entry is saved.
     await Alert.findByIdAndDelete(alert._id);
 
     return res.status(200).json({
@@ -362,6 +372,7 @@ const deleteAlert = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {
