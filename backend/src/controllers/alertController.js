@@ -290,33 +290,45 @@ const updateAlert = async (req, res) => {
  // GET /api/alerts/:id/activity
 const getAlertActivity = async (req, res) => {
   try {
-    const alert = await Alert.findById(req.params.id);
+    const { id } = req.params;
 
-    if (!alert) {
-      return res.status(404).json({
-        success: false,
-        message: "Alert not found",
-      });
-    }
-
-    const activities = await AlertActivity.find({
-      alertId: alert._id,
-    }).sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      count: activities.length,
-      data: activities,
-    });
-  } catch (error) {
-    console.error("Get alert activity error:", error);
-
-    if (error.name === "CastError") {
+    if (!id || !require("mongoose").isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid alert ID",
       });
     }
+
+    // Check history first, because the alert may already be deleted.
+    const activities = await AlertActivity.find({
+      alertId: id,
+    }).sort({ createdAt: -1 });
+
+    if (activities.length > 0) {
+      return res.status(200).json({
+        success: true,
+        count: activities.length,
+        data: activities,
+      });
+    }
+
+    // If there is no history, check whether the alert still exists.
+    const alert = await Alert.findById(id);
+
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        message: "Alert and its activity history were not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: 0,
+      data: [],
+    });
+  } catch (error) {
+    console.error("Get alert activity error:", error);
 
     return res.status(500).json({
       success: false,
