@@ -8,19 +8,14 @@ function getSeverityClass(severity) {
   switch (severity) {
     case "CRITICAL":
       return "critical";
-
     case "HIGH":
       return "high";
-
     case "MEDIUM":
       return "medium";
-
     case "LOW":
       return "low";
-
     case "INFORMATIONAL":
       return "informational";
-
     default:
       return "informational";
   }
@@ -30,19 +25,30 @@ const seedAlerts = async () => {
   try {
     await connectDB();
 
-    await Alert.deleteMany();
-
     const preparedAlerts = alertData.map((alert) => ({
       ...alert,
       severityClass: getSeverityClass(alert.severity),
     }));
 
-    await Alert.insertMany(preparedAlerts);
+    let insertedCount = 0;
+
+    for (const alert of preparedAlerts) {
+      const result = await Alert.updateOne(
+        { title: alert.title },
+        { $setOnInsert: alert },
+        { upsert: true }
+      );
+
+      if (result.upsertedCount > 0) {
+        insertedCount++;
+      }
+    }
 
     console.log(
-      `${preparedAlerts.length} alerts inserted successfully`
+      `Seed completed. ${insertedCount} new default alerts inserted.`
     );
 
+    console.log("Existing alerts were preserved.");
     process.exit(0);
   } catch (error) {
     console.error("Seeding failed:", error);

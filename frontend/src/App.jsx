@@ -17,33 +17,174 @@ import {
 } from "./services/api";
 
 
+
+
 function AlertSummary({ alerts }) {
-  const activeCount = alerts.filter(
+  const activeAlerts = alerts.filter(
     (alert) => alert.active !== false
+  );
+
+  const severities = [
+    { label: "Critical", color: "#ff6262" },
+    { label: "High", color: "#ffad4d" },
+    { label: "Medium", color: "#f3d36a" },
+    { label: "Low", color: "#35d6a0" },
+    { label: "Informational", color: "#65a9ff" },
+  ];
+
+  const severityCounts = severities.map((severity) => ({
+    ...severity,
+    count: activeAlerts.filter(
+      (alert) =>
+        alert.severity?.toUpperCase() ===
+        severity.label.toUpperCase()
+    ).length,
+  }));
+
+  const notificationRequired = activeAlerts.filter(
+    (alert) =>
+      (alert.notification || "")
+        .toLowerCase()
+        .includes("required")
   ).length;
 
-  const criticalCount = alerts.filter(
-    (alert) =>
-      alert.active !== false &&
-      alert.severity?.toUpperCase() === "CRITICAL"
-  ).length;
+  const criticalCount = severityCounts.find(
+    (item) => item.label === "Critical"
+  ).count;
+
+  const highCount = severityCounts.find(
+    (item) => item.label === "High"
+  ).count;
 
   return (
-    <section className="alert-summary">
-      <div className="summary-card">
-        <span>Active Alerts</span>
-        <strong>{String(activeCount).padStart(2, "0")}</strong>
-        <p className="summary-status">Monitoring status</p>
+    <section className="security-overview">
+      <div className="overview-heading">
+        <div>
+          <span className="eyebrow">SECURITY MONITORING</span>
+          <h2>Security Overview</h2>
+          <p>
+            Alert status, severity distribution and
+            notification requirements.
+          </p>
+        </div>
+
+        <span className="overview-live-label">
+          {activeAlerts.length} Active
+        </span>
       </div>
 
-      <div className="summary-card">
-        <span>Critical Alerts</span>
-        <strong>{String(criticalCount).padStart(2, "0")}</strong>
-        <p className="critical-status">Requires attention</p>
+      <div className="overview-stat-grid">
+        <div className="summary-card summary-active">
+          <span>Active Alerts</span>
+          <strong>{String(activeAlerts.length).padStart(2, "0")}</strong>
+          <p>Currently active</p>
+        </div>
+
+        <div className="summary-card summary-critical">
+          <span>Critical Alerts</span>
+          <strong>{String(criticalCount).padStart(2, "0")}</strong>
+          <p>Highest severity</p>
+        </div>
+
+        <div className="summary-card summary-high">
+          <span>High Alerts</span>
+          <strong>{String(highCount).padStart(2, "0")}</strong>
+          <p>High priority</p>
+        </div>
+
+        <div className="summary-card summary-total">
+          <span>Total Procedures</span>
+          <strong>{String(alerts.length).padStart(2, "0")}</strong>
+          <p>Loaded procedures</p>
+        </div>
+      </div>
+
+      <div className="overview-detail-grid">
+        <div className="overview-panel">
+          <div className="overview-panel-heading">
+            <h3>Severity Breakdown</h3>
+            <span>Active alerts</span>
+          </div>
+
+          {severityCounts.map((severity) => {
+            const percentage =
+              activeAlerts.length === 0
+                ? 0
+                : (severity.count / activeAlerts.length) * 100;
+
+            return (
+              <div className="severity-row" key={severity.label}>
+                <div className="severity-label-row">
+                  <span>
+                    <i
+                      className="severity-dot"
+                      style={{ backgroundColor: severity.color }}
+                    />
+                    {severity.label}
+                  </span>
+
+                  <strong>{severity.count}</strong>
+                </div>
+
+                <div className="severity-track">
+                  <div
+                    className="severity-fill"
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: severity.color,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="overview-panel">
+          <div className="overview-panel-heading">
+            <h3>Notification Configuration</h3>
+            <span>Active alerts</span>
+          </div>
+
+          <div className="notification-total">
+            <strong>{notificationRequired}</strong>
+            <span>Alerts marked as requiring notification</span>
+          </div>
+
+          <div className="notification-track">
+            <div
+              className="notification-fill"
+              style={{
+                width: `${
+                  activeAlerts.length === 0
+                    ? 0
+                    : (notificationRequired / activeAlerts.length) * 100
+                }%`,
+              }}
+            />
+          </div>
+
+          <p className="overview-note">
+            Based on each alert's saved notification text.
+            This does not indicate whether a notification was sent.
+          </p>
+        </div>
+      </div>
+
+      <div className="overview-activity-placeholder">
+        <div>
+          <h3>Activity History</h3>
+          <p>
+            Activity totals will be connected to your saved
+            CREATED, UPDATED and DELETED records next.
+          </p>
+        </div>
       </div>
     </section>
   );
 }
+
+
 
 function App() {
   const [alerts, setAlerts] = useState([]);
