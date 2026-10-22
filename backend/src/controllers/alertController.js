@@ -401,11 +401,59 @@ const deleteAlert = async (req, res) => {
   }
 };
 
+
+const getActivitySummary = async (req, res) => {
+  try {
+    const results = await AlertActivity.aggregate([
+      {
+        $group: {
+          _id: "$action",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const summary = {
+      created: 0,
+      updated: 0,
+      deleted: 0,
+      total: 0,
+    };
+
+    for (const item of results) {
+      if (item._id === "CREATED") {
+        summary.created = item.count;
+      } else if (item._id === "UPDATED") {
+        summary.updated = item.count;
+      } else if (item._id === "DELETED") {
+        summary.deleted = item.count;
+      }
+    }
+
+    summary.total =
+      summary.created + summary.updated + summary.deleted;
+
+    return res.status(200).json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    console.error("Get activity summary error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch activity summary",
+    });
+  }
+};
+
+
 module.exports = {
   getAlerts,
   getAlertById,
   createAlert,
   updateAlert,
   getAlertActivity,
+  getActivitySummary,
   deleteAlert,
 };

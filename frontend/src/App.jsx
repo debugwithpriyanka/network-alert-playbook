@@ -18,7 +18,6 @@ import {
 
 
 
-
 function AlertSummary({ alerts }) {
   const activeAlerts = alerts.filter(
     (alert) => alert.active !== false
@@ -183,8 +182,6 @@ function AlertSummary({ alerts }) {
     </section>
   );
 }
-
-
 
 function App() {
   const [alerts, setAlerts] = useState([]);
@@ -433,4 +430,3 @@ const handleUpdateAlert = async (id, alertData) => {
 }
 
 export default App;
-

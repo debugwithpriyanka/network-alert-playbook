@@ -2409,3 +2409,37 @@ button {
     padding: 15px;
   }
 }
+
+
+.activity-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.activity-summary-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  border: 1px solid #243449;
+  border-radius: 10px;
+  background: #091827;
+}
+
+.activity-summary-grid span {
+  color: #91a4bb;
+  font-size: 12px;
+}
+
+.activity-summary-grid strong {
+  color: #f4f7fb;
+  font-size: 25px;
+}
+
+@media (max-width: 520px) {
+  .activity-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

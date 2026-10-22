@@ -1,10 +1,8 @@
-
 const API_URL = "http://localhost:5000/api";
 
 // GET: Fetch all active alerts
 export const getAlerts = async () => {
   const response = await fetch(`${API_URL}/alerts`);
-
   const result = await response.json();
 
   if (!response.ok) {
@@ -37,10 +35,59 @@ export const createAlert = async (alertData) => {
   return result.data;
 };
 
+// PUT: Update an existing alert
+export const updateAlert = async (id, alertData) => {
+  if (!id) {
+    throw new Error("Alert ID is required");
+  }
 
-export const getAlertActivity = async (alertId) => {
   const response = await fetch(
-    `${API_URL}/alerts/${alertId}/activity`
+    `${API_URL}/alerts/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(alertData),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to update alert"
+    );
+  }
+
+  return result.data;
+};
+
+// GET: Fetch overall activity totals
+export const getActivitySummary = async () => {
+  const response = await fetch(
+    `${API_URL}/alerts/activity/summary`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch activity summary"
+    );
+  }
+
+  return result.data;
+};
+
+// GET: Fetch activity history for one alert
+export const getAlertActivity = async (alertId) => {
+  if (!alertId) {
+    throw new Error("Alert ID is required");
+  }
+
+  const response = await fetch(
+    `${API_URL}/alerts/${encodeURIComponent(alertId)}/activity`
   );
 
   const result = await response.json();
@@ -54,6 +101,7 @@ export const getAlertActivity = async (alertId) => {
   return result;
 };
 
+// DELETE: Permanently delete an alert
 export const deleteAlert = async (id) => {
   if (!id) {
     throw new Error("Alert ID is required");
@@ -76,7 +124,3 @@ export const deleteAlert = async (id) => {
 
   return result;
 };
-
-
-
-

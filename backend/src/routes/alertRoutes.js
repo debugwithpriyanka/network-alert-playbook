@@ -1,4 +1,3 @@
-
 const express = require("express");
 
 const {
@@ -7,14 +6,26 @@ const {
   createAlert,
   updateAlert,
   getAlertActivity,
+  getActivitySummary,
   deleteAlert,
 } = require("../controllers/alertController");
+
+console.log("Route handler diagnostic:", {
+  getAlerts: typeof getAlerts,
+  getAlertById: typeof getAlertById,
+  createAlert: typeof createAlert,
+  updateAlert: typeof updateAlert,
+  getAlertActivity: typeof getAlertActivity,
+  getActivitySummary: typeof getActivitySummary,
+  deleteAlert: typeof deleteAlert,
+});
 
 const router = express.Router();
 
 router.get("/", getAlerts);
 router.post("/", createAlert);
 
+router.get("/activity/summary", getActivitySummary);
 router.get("/:id/activity", getAlertActivity);
 router.get("/:id", getAlertById);
 
