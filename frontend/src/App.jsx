@@ -16,10 +16,12 @@ import {
   deleteAlert,
 } from "./services/api";
 
-
-
-function AlertSummary({ alerts }) {
-  const activeAlerts = alerts.filter(
+  function AlertSummary({ 
+    alerts,
+    activitySummary,
+    activitySummaryError,
+  }) {
+   const activeAlerts = alerts.filter(
     (alert) => alert.active !== false
   );
 
@@ -174,10 +176,36 @@ function AlertSummary({ alerts }) {
         <div>
           <h3>Activity History</h3>
           <p>
-            Activity totals will be connected to your saved
-            CREATED, UPDATED and DELETED records next.
+             Summary of recorded alert activity.
           </p>
         </div>
+
+         {activitySummaryError ? (
+          <p role="alert">{activitySummaryError}</p>
+            ) : (
+
+        <div className="overview-stat-grid">
+          <div className="summary-card">
+            <span>Created</span>
+            <strong>{activitySummary.created}</strong>
+          </div>
+
+        <div className="summary-card">
+          <span>Updated</span>
+          <strong>{activitySummary.updated}</strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Deleted</span>
+          <strong>{activitySummary.deleted}</strong>
+        </div>
+
+         <div className="summary-card">
+           <span>Total Activities</span>
+           <strong>{activitySummary.total}</strong>
+          </div>
+        </div>
+         )}
       </div>
     </section>
   );
@@ -197,8 +225,36 @@ function App() {
 
   const [historyAlert, setHistoryAlert] = useState(null);
 
+  const [activitySummary, setActivitySummary] = useState({
+    created: 0,
+    updated: 0,
+    deleted: 0,
+    total: 0,
+  });
+
+  const [activitySummaryError, setActivitySummaryError] =
+    useState("");
+
   const [deletingAlertId, setDeletingAlertId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
+
+  const loadActivitySummary = async () => {
+   try {
+     const summary = await getActivitySummary();
+
+      setActivitySummary({
+        created: summary.created ?? 0,
+        updated: summary.updated ?? 0,
+        deleted: summary.deleted ?? 0,
+        total: summary.total ?? 0,
+      });
+
+      setActivitySummaryError("");
+    } catch (error) {
+        console.error("Failed to load activity summary:", error);
+        setActivitySummaryError("Unable to load activity totals.");
+      }
+  };
 
   useEffect(() => {
     async function loadAlerts() {
@@ -217,6 +273,7 @@ function App() {
     }
 
     loadAlerts();
+    loadActivitySummary();
   }, []);
 
   // Create a new alert
@@ -371,7 +428,11 @@ const handleUpdateAlert = async (id, alertData) => {
           />
         </section>
 
-        <AlertSummary alerts={alerts} />
+        <AlertSummary 
+          alerts={alerts}
+          activitySummary={activitySummary}
+          activitySummaryError={activitySummaryError}
+        />
 
         <section className="alert-section">
           {loading && (
