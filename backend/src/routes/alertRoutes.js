@@ -7,6 +7,7 @@ const {
   updateAlert,
   getAlertActivity,
   getActivitySummary,
+  getRecentActivity,
   deleteAlert,
 } = require("../controllers/alertController");
 
@@ -27,6 +28,7 @@ router.post("/", createAlert);
 
 router.get("/activity/summary", getActivitySummary);
 router.get("/:id/activity", getAlertActivity);
+router.get("/activity/recent", getRecentActivity);
 router.get("/:id", getAlertById);
 
 router.put("/:id", updateAlert);

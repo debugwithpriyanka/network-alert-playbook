@@ -333,6 +333,28 @@ const getAlertActivity = async (req, res) => {
   }
 };
 
+// GET: Fetch the latest 10 activity records
+const getRecentActivity = async (req, res) => {
+  try {
+    const activities = await AlertActivity.find()
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    return res.status(200).json({
+      success: true,
+      count: activities.length,
+      data: activities,
+    });
+  } catch (error) {
+    console.error("Get recent activity error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch recent activity",
+    });
+  }
+};
+
 // DELETE /api/alerts/:id
 const deleteAlert = async (req, res) => {
   const { id } = req.params;
@@ -455,5 +477,6 @@ module.exports = {
   updateAlert,
   getAlertActivity,
   getActivitySummary,
+  getRecentActivity,
   deleteAlert,
 };
