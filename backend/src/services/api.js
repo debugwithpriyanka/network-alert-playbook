@@ -101,6 +101,25 @@ export const getAlertActivity = async (alertId) => {
   return result;
 };
 
+
+/* GET: Fetch the latest activity records */
+export const getRecentActivity = async () => {
+  const response = await fetch(
+    `${API_URL}/alerts/activity/recent`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch recent activity"
+    );
+  }
+
+  return result.data;
+};
+
+
 // DELETE: Permanently delete an alert
 export const deleteAlert = async (id) => {
   if (!id) {

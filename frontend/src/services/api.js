@@ -58,7 +58,41 @@ export const updateAlert = async (id, alertData) => {
   return result.data;
 };
 
- 
+
+ // GET: Fetch overall activity totals
+export const getActivitySummary = async () => {
+  const response = await fetch(
+    `${API_URL}/alerts/activity/summary`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch activity summary"
+    );
+  }
+
+  return result.data;
+};
+
+// GET: Fetch the latest activity records
+export const getRecentActivity = async () => {
+  const response = await fetch(
+    `${API_URL}/alerts/activity/recent`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch recent activity"
+    );
+  }
+
+  return result.data;
+};
+
 // GET: Fetch activity history for a specific alert
 export const getAlertActivity = async (alertId) => {
   if (!alertId) {

@@ -14,14 +14,22 @@ import {
   createAlert,
   updateAlert,
   deleteAlert,
+  getActivitySummary,
+  getRecentActivity,
 } from "./services/api";
 
-  function AlertSummary({ 
-    alerts,
-    activitySummary,
-    activitySummaryError,
-  }) {
-   const activeAlerts = alerts.filter(
+  
+function AlertSummary({
+  alerts,
+  activitySummary,
+  activitySummaryError,
+  recentActivities,
+  recentActivityError,
+}) {
+  const [activitySummaryOpen, setActivitySummaryOpen] = useState(true);
+  const [recentActivityOpen, setRecentActivityOpen] = useState(true);
+
+  const activeAlerts = alerts.filter(
     (alert) => alert.active !== false
   );
 
@@ -44,9 +52,7 @@ import {
 
   const notificationRequired = activeAlerts.filter(
     (alert) =>
-      (alert.notification || "")
-        .toLowerCase()
-        .includes("required")
+      (alert.notification || "").toLowerCase().includes("required")
   ).length;
 
   const criticalCount = severityCounts.find(
@@ -59,6 +65,7 @@ import {
 
   return (
     <section className="security-overview">
+      {/* Security Overview heading */}
       <div className="overview-heading">
         <div>
           <span className="eyebrow">SECURITY MONITORING</span>
@@ -74,10 +81,13 @@ import {
         </span>
       </div>
 
+      {/* Overview statistics */}
       <div className="overview-stat-grid">
         <div className="summary-card summary-active">
           <span>Active Alerts</span>
-          <strong>{String(activeAlerts.length).padStart(2, "0")}</strong>
+          <strong>
+            {String(activeAlerts.length).padStart(2, "0")}
+          </strong>
           <p>Currently active</p>
         </div>
 
@@ -100,6 +110,7 @@ import {
         </div>
       </div>
 
+      {/* Severity and notification details */}
       <div className="overview-detail-grid">
         <div className="overview-panel">
           <div className="overview-panel-heading">
@@ -172,44 +183,138 @@ import {
         </div>
       </div>
 
-      <div className="overview-activity-placeholder">
-        <div>
-          <h3>Activity History</h3>
-          <p>
-             Summary of recorded alert activity.
-          </p>
-        </div>
+      {/* Collapsible activity panels */}
+      <div className="activity-panels-grid">
+        {/* Activity Summary */}
+        <section className="activity-summary-section">
+          <button
+            type="button"
+            className="activity-section-heading activity-section-toggle"
+            onClick={() =>
+              setActivitySummaryOpen((open) => !open)
+            }
+            aria-expanded={activitySummaryOpen}
+            aria-controls="activity-summary-content"
+          >
+            <h3>Activity Summary</h3>
+            <span
+              className={
+                activitySummaryOpen
+                  ? "activity-arrow open"
+                  : "activity-arrow"
+              }
+              aria-hidden="true"
+            >
+              ⌄
+            </span>
+          </button>
 
-         {activitySummaryError ? (
-          <p role="alert">{activitySummaryError}</p>
-            ) : (
+          {activitySummaryOpen && (
+            <div id="activity-summary-content">
+              {activitySummaryError ? (
+                <p className="error-message">
+                  {activitySummaryError}
+                </p>
+              ) : (
+                <div className="activity-summary-grid">
+                  <div className="activity-stat-card activity-created">
+                    <span>Created</span>
+                    <strong>{activitySummary.created}</strong>
+                  </div>
 
-        <div className="overview-stat-grid">
-          <div className="summary-card">
-            <span>Created</span>
-            <strong>{activitySummary.created}</strong>
-          </div>
+                  <div className="activity-stat-card activity-updated">
+                    <span>Updated</span>
+                    <strong>{activitySummary.updated}</strong>
+                  </div>
 
-        <div className="summary-card">
-          <span>Updated</span>
-          <strong>{activitySummary.updated}</strong>
-        </div>
+                  <div className="activity-stat-card activity-deleted">
+                    <span>Deleted</span>
+                    <strong>{activitySummary.deleted}</strong>
+                  </div>
 
-        <div className="summary-card">
-          <span>Deleted</span>
-          <strong>{activitySummary.deleted}</strong>
-        </div>
+                  <div className="activity-stat-card activity-total">
+                    <span>Total Records</span>
+                    <strong>{activitySummary.total}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
 
-         <div className="summary-card">
-           <span>Total Activities</span>
-           <strong>{activitySummary.total}</strong>
-          </div>
-        </div>
-         )}
+        {/* Recent Activity */}
+        <section className="recent-activity-section">
+          <button
+            type="button"
+            className="activity-section-heading activity-section-toggle"
+            onClick={() =>
+              setRecentActivityOpen((open) => !open)
+            }
+            aria-expanded={recentActivityOpen}
+            aria-controls="recent-activity-content"
+          >
+            <h3>Recent Activity</h3>
+            <span
+              className={
+                recentActivityOpen
+                  ? "activity-arrow open"
+                  : "activity-arrow"
+              }
+              aria-hidden="true"
+            >
+              ⌄
+            </span>
+          </button>
+
+          {recentActivityOpen && (
+            <div id="recent-activity-content">
+              {recentActivityError ? (
+                <p className="error-message">
+                  {recentActivityError}
+                </p>
+              ) : recentActivities.length === 0 ? (
+                <p className="activity-empty-state">
+                  No recent activity records found.
+                </p>
+              ) : (
+                <div className="recent-activity-list">
+                  {recentActivities.slice(0, 5).map((activity) => (
+                    <div
+                      className="recent-activity-item"
+                      key={activity._id}
+                    >
+                      <div className="recent-activity-details">
+                        <strong>
+                          {(activity.action || "ACTIVITY").toUpperCase()}
+                        </strong>
+
+                        <p>
+                          {activity.description ||
+                            `Alert "${
+                              activity.alertTitle || "Unknown alert"
+                            }" activity recorded.`}
+                        </p>
+
+                        <span>
+                          {activity.createdAt
+                            ? new Date(
+                                activity.createdAt
+                              ).toLocaleString()
+                            : "Time unavailable"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
       </div>
     </section>
   );
 }
+
 
 function App() {
   const [alerts, setAlerts] = useState([]);
@@ -235,6 +340,9 @@ function App() {
   const [activitySummaryError, setActivitySummaryError] =
     useState("");
 
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [recentActivityError, setRecentActivityError] = useState("");
+
   const [deletingAlertId, setDeletingAlertId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
 
@@ -256,6 +364,17 @@ function App() {
       }
   };
 
+  const loadRecentActivity = async () => {
+  try {
+    const activities = await getRecentActivity();
+    setRecentActivities(activities);
+    setRecentActivityError("");
+  } catch (error) {
+    console.error("Failed to load recent activity:", error);
+    setRecentActivityError("Unable to load recent activity.");
+  }
+};
+
   useEffect(() => {
     async function loadAlerts() {
       try {
@@ -274,6 +393,7 @@ function App() {
 
     loadAlerts();
     loadActivitySummary();
+    loadRecentActivity();
   }, []);
 
   // Create a new alert
@@ -432,6 +552,8 @@ const handleUpdateAlert = async (id, alertData) => {
           alerts={alerts}
           activitySummary={activitySummary}
           activitySummaryError={activitySummaryError}
+          recentActivities={recentActivities}
+          recentActivityError={recentActivityError}  
         />
 
         <section className="alert-section">
